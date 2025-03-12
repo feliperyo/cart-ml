@@ -7,24 +7,35 @@ import Loading from '../Loading/Loading';
 import AppContext from '../../context/AppContext';
 
 function Products() {
-
   const { products, setProducts, loading, setLoading } = useContext(AppContext);
-  
 
   useEffect(() => {
-    fetchProducts('iphone').then((response) => {
-      setProducts(response);
-      setLoading(false);
-    });
+    setLoading(true); // Garante que o estado de loading é ativado
+
+    fetchProducts('iphone')
+      .then((response) => {
+        if (!response || !Array.isArray(response)) {
+          throw new Error('Resposta inválida da API');
+        }
+        setProducts(response);
+      })
+      .catch((error) => {
+        console.error('Erro ao buscar produtos:', error);
+        setProducts([]); // Evita erro ao mapear um valor indefinido
+      })
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    (loading && <Loading /> ) || (
+    loading ? <Loading /> : (
       <section className="products container">
-        {products.map((product) => <ProductCard key={product.id} data={product} />)}
+        {products.length > 0 ? (
+          products.map((product) => <ProductCard key={product.id} data={product} />)
+        ) : (
+          <p>Nenhum produto encontrado.</p>
+        )}
       </section>
     )
-    
   );
 }
 
